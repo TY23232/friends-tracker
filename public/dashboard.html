@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Friends Tracker - Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Friends Tracker</h2>
+        <div class="user-info" id="userInfo"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Your Groups</h3>
+        <div id="groupsList"></div>
+        <button onclick="showCreateGroup()" class="btn-small">+ New Group</button>
+      </div>
+
+      <div class="sidebar-section" id="membersSection" style="display:none">
+        <h3 id="currentGroupName">Members</h3>
+        <div id="membersList"></div>
+        <button onclick="showInvite()" class="btn-small">+ Invite Member</button>
+      </div>
+
+      <div class="sidebar-section" id="pingSection" style="display:none">
+        <h3>Location Requests</h3>
+        <div id="pingList"></div>
+      </div>
+
+      <div class="sidebar-section" id="routeSection" style="display:none">
+        <button onclick="clearRoute()" class="btn-small" style="background:#f44336;">Clear Route</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div id="map"></div>
+    </main>
+  </div>
+
+  <div id="createGroupModal" class="modal" style="display:none">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('createGroupModal')">&times;</span>
+      <h2>Create New Group</h2>
+      <div class="form-group">
+        <label for="groupName">Group Name</label>
+        <input type="text" id="groupName" placeholder="e.g. My Friends">
+      </div>
+      <button onclick="createGroup()" class="btn-primary">Create</button>
+    </div>
+  </div>
+
+  <div id="inviteModal" class="modal" style="display:none">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('inviteModal')">&times;</span>
+      <h2>Invite Member</h2>
+      <p>Share this code or link with friends:</p>
+      <div class="invite-code" id="inviteCode">-----</div>
+      <div class="invite-link" id="inviteLink"></div>
+      <button onclick="copyInvite()" class="btn-small">Copy Invite Link</button>
+    </div>
+  </div>
+
+  <div id="etaModal" class="modal" style="display:none">
+    <div class="modal-content eta-content">
+      <span class="close" onclick="closeModal('etaModal')">&times;</span>
+      <h2 id="etaTitle">ETA</h2>
+      <div id="etaDetails"></div>
+      <div id="etaMap" style="height:300px; margin-top:12px; border-radius:8px;"></div>
+    </div>
+  </div>
+
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/map.js"></script>
+</body>
+</html>

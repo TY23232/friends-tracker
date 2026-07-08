@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Share My Location</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+  <div class="share-container">
+    <div class="share-card">
+      <div class="share-header">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <h2>Location Sharing Active</h2>
+        <p>Your location is being shared with your friends group.</p>
+      </div>
+
+      <div class="status-indicator" id="statusIndicator">
+        <span class="status-dot active" id="statusDot"></span>
+        <span id="statusText">Connecting...</span>
+      </div>
+
+      <div class="location-info" id="locationInfo">
+        <div class="info-row"><strong>Latitude:</strong> <span id="latDisplay">--</span></div>
+        <div class="info-row"><strong>Longitude:</strong> <span id="lngDisplay">--</span></div>
+        <div class="info-row"><strong>Accuracy:</strong> <span id="accuracyDisplay">--</span></div>
+        <div class="info-row"><strong>Last updated:</strong> <span id="timeDisplay">--</span></div>
+      </div>
+
+      <div class="share-actions">
+        <button onclick="updateInterval = 5000; restartTracking();" class="btn-small">High Precision</button>
+        <button onclick="updateInterval = 30000; restartTracking();" class="btn-small">Balanced</button>
+        <button onclick="updateInterval = 120000; restartTracking();" class="btn-small">Battery Save</button>
+      </div>
+
+      <div id="pingNotification" class="ping-notification" style="display:none">
+        <p id="pingMessage"></p>
+        <button onclick="acknowledgePing()" class="btn-small">OK</button>
+      </div>
+
+      <button onclick="locationSharing = !locationSharing; toggleSharing();" id="toggleBtn" class="btn-danger">Stop Sharing</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const API = window.location.origin;
+    let socket;
+    let watchId = null;
+    let userData = JSON.parse(localStorage.getItem('user'));
+    let groupId = new URLSearchParams(window.location.search).get('groupId');
+    let locationSharing = true;
+    let updateInterval = 10000;
+    let trackingTimer = null;
+    let lastPosition = null;
+
+    if (!userData || !groupId) {
+      document.body.innerHTML = '<div class="auth-container"><div class="auth-card"><h2>Error</h2><p>Missing user data or group ID. Please use the invite link.</p></div></div>';
+      throw new Error('Missing data');
+    }
+
+    document.getElementById('statusText').textContent = 'Starting location services...';
+
+    function connectSocket() {
+      socket = io(API, { transports: ['polling', 'websocket'] });
+      socket.on('connect', () => {
+        socket.emit('user:join', { userId: userData.id, groupId });
+        setStatus('connected', 'Connected');
+      });
+
+      socket.on('disconnect', () => {
+        setStatus('offline', 'Disconnected - reconnecting...');
+      });
+
+      socket.on('connect_error', () => {
+        setStatus('offline', 'Connection error - retrying...');
+      });
+
+      socket.on('location:requested', ({ fromUserId, fromName }) => {
+        setStatus('active', `📍 ${fromName} is requesting your location`);
+        if (lastPosition) {
+          socket.emit('location:request:response', {
+            fromUserId,
+            targetUserId: userData.id,
+            groupId,
+            lat: lastPosition.lat,
+            lng: lastPosition.lng
+          });
+        }
+      });
+
+      socket.on('ping:received', ({ fromName }) => {
+        document.getElementById('pingMessage').textContent = `📍 ${fromName} is checking on you! Tap to acknowledge.`;
+        document.getElementById('pingNotification').style.display = 'block';
+        if (navigator.vibrate) navigator.vibrate(200);
+        socket.emit('ping:ack', { fromUserId: userData.id, targetUserId: userData.id, groupId });
+      });
+    }
+
+    function setStatus(state, text) {
+      const dot = document.getElementById('statusDot');
+      const textEl = document.getElementById('statusText');
+      dot.className = 'status-dot ' + state;
+      textEl.textContent = text;
+    }
+
+    function updateLocationDisplay(pos) {
+      document.getElementById('latDisplay').textContent = pos.lat.toFixed(6);
+      document.getElementById('lngDisplay').textContent = pos.lng.toFixed(6);
+      document.getElementById('accuracyDisplay').textContent = pos.accuracy ? `${pos.accuracy.toFixed(0)}m` : '--';
+      document.getElementById('timeDisplay').textContent = new Date().toLocaleTimeString();
+    }
+
+    function startTracking() {
+      if (!navigator.geolocation) {
+        setStatus('offline', 'Geolocation not supported on this device');
+        return;
+      }
+
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 30000
+      };
+
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            heading: position.coords.heading,
+            speed: position.coords.speed
+          };
+          lastPosition = pos;
+          updateLocationDisplay(pos);
+
+          if (locationSharing && socket && socket.connected) {
+            socket.emit('location:update', {
+              userId: userData.id,
+              groupId,
+              ...pos,
+              timestamp: Date.now()
+            });
+            setStatus('active', 'Sharing location');
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          setStatus('offline', `Location error: ${error.message}`);
+        },
+        options
+      );
+    }
+
+    function restartTracking() {
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+      startTracking();
+    }
+
+    function toggleSharing() {
+      const btn = document.getElementById('toggleBtn');
+      if (locationSharing) {
+        btn.textContent = 'Start Sharing';
+        btn.className = 'btn-primary';
+        setStatus('paused', 'Location sharing paused');
+      } else {
+        btn.textContent = 'Stop Sharing';
+        btn.className = 'btn-danger';
+        setStatus('active', 'Sharing location');
+        if (lastPosition && socket && socket.connected) {
+          socket.emit('location:update', { userId: userData.id, groupId, ...lastPosition, timestamp: Date.now() });
+        }
+      }
+    }
+
+    function acknowledgePing() {
+      document.getElementById('pingNotification').style.display = 'none';
+    }
+
+    connectSocket();
+    startTracking();
+  </script>
+</body>
+</html>

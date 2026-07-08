@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Friends Group</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <h1>Join Friends Group</h1>
+      <p>You've been invited to join a friends tracking group!</p>
+      <div id="joinForm">
+        <div class="form-group">
+          <label for="joinName">Your Name</label>
+          <input type="text" id="joinName" placeholder="Enter your name" required>
+        </div>
+        <button onclick="handleJoin()" class="btn-primary">Join Group</button>
+      </div>
+      <div id="joinError" class="error-msg" style="display:none"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = window.location.origin;
+
+    async function handleJoin() {
+      const name = document.getElementById('joinName').value.trim();
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const errorEl = document.getElementById('joinError');
+      errorEl.style.display = 'none';
+
+      if (!name || !code) {
+        errorEl.textContent = 'Missing name or invite code';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      async function getOrCreateUser() {
+        let userData = JSON.parse(localStorage.getItem('user'));
+        if (userData) {
+          const check = await fetch(`${API}/api/user/${userData.id}`);
+          if (check.ok) return userData;
+          localStorage.removeItem('user');
+        }
+        const res = await fetch(`${API}/api/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: `guest-${Date.now()}@temp.com`, name })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return data.user;
+      }
+
+      try {
+        const userData = await getOrCreateUser();
+        const res = await fetch(`${API}/api/groups/join/${code}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userData.id })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        window.location.href = '/location-share.html?groupId=' + data.group.id;
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
