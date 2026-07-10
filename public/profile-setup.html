@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Set Up Profile - Find My Parent</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <style>
+    .role-selector { display: flex; gap: 16px; margin: 24px 0; }
+    .role-card {
+      flex: 1; padding: 24px 16px; border: 3px solid var(--border); border-radius: var(--radius-lg);
+      cursor: pointer; text-align: center; transition: all 0.2s; background: #fafafa;
+    }
+    .role-card:hover { border-color: #90caf9; background: #e3f2fd; }
+    .role-card.selected { border-color: var(--blue); background: #e3f2fd; }
+    .role-card svg { width: 48px; height: 48px; margin-bottom: 8px; }
+    .role-card h3 { font-size: 18px; margin-bottom: 4px; }
+    .role-card p { font-size: 13px; color: var(--text-secondary); }
+    .profile-form { display: none; text-align: left; margin-top: 8px; }
+    .profile-form.active { display: block; }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+    @media (max-width: 480px) { .role-selector { flex-direction: column; } .form-row { flex-direction: column; gap: 0; } }
+  </style>
+</head>
+<body>
+  <div class="auth-container blue-theme">
+    <div class="auth-card" style="max-width: 480px;">
+      <div class="logo">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2196F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <h1>Set Up Your Profile</h1>
+        <p>Tell us about yourself</p>
+      </div>
+
+      <div id="step1">
+        <p style="font-size:14px; color:var(--text-secondary); margin-bottom:8px;">Are you a kid or a parent?</p>
+        <div class="role-selector">
+          <div class="role-card" onclick="selectRole('kid')" id="roleKid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2196F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+              <line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+            <h3>Kid</h3>
+            <p>I'm a child</p>
+          </div>
+          <div class="role-card" onclick="selectRole('parent')" id="roleParent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2196F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            <h3>Parent</h3>
+            <p>I'm a parent</p>
+          </div>
+        </div>
+        <button onclick="goToStep2()" class="btn-primary blue-btn" id="nextBtn" disabled>Next</button>
+        <div id="step1Error" class="error-msg" style="display:none"></div>
+      </div>
+
+      <div id="step2" style="display:none">
+        <form id="profileForm" onsubmit="saveProfile(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" id="firstName" placeholder="First name" required>
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" id="lastName" placeholder="Last name" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Age</label>
+              <input type="number" id="age" placeholder="e.g. 25" min="1" max="150" required>
+            </div>
+            <div class="form-group">
+              <label>Weight (kg)</label>
+              <input type="number" id="weight" placeholder="e.g. 70" min="1" step="0.1">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Height (cm)</label>
+              <input type="number" id="height" placeholder="e.g. 170" min="1" step="0.1">
+            </div>
+            <div class="form-group">
+              <label>Contact Number</label>
+              <input type="tel" id="contactNumber" placeholder="e.g. 09123456789" required>
+            </div>
+          </div>
+          <div id="kidFields" style="display:none">
+            <div class="form-row">
+              <div class="form-group">
+                <label>School</label>
+                <input type="text" id="school" placeholder="e.g. ABC Elementary School">
+              </div>
+              <div class="form-group">
+                <label>Education Level</label>
+                <select id="educationLevel" style="width:100%; padding:14px; border:2px solid var(--border); border-radius:10px; font-size:16px; outline:none; -webkit-appearance:none;">
+                  <option value="">Select...</option>
+                  <option value="Kindergarten">Kindergarten</option>
+                  <option value="Elementary">Elementary</option>
+                  <option value="Middle School">Middle School</option>
+                  <option value="High School">High School</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary blue-btn" style="margin-top:8px;">Save Profile</button>
+        </form>
+        <div id="step2Error" class="error-msg" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = window.location.origin;
+    let selectedRole = null;
+    let userData = JSON.parse(localStorage.getItem('user'));
+
+    if (!userData) {
+      window.location.href = '/';
+    }
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('role' + role.charAt(0).toUpperCase() + role.slice(1)).classList.add('selected');
+      document.getElementById('nextBtn').disabled = false;
+      document.getElementById('step1Error').style.display = 'none';
+    }
+
+    function goToStep2() {
+      if (!selectedRole) {
+        document.getElementById('step1Error').textContent = 'Please select Kid or Parent';
+        document.getElementById('step1Error').style.display = 'block';
+        return;
+      }
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'block';
+
+      if (selectedRole === 'kid') {
+        document.getElementById('kidFields').style.display = 'block';
+      }
+    }
+
+    async function saveProfile(e) {
+      e.preventDefault();
+      const errorEl = document.getElementById('step2Error');
+      errorEl.style.display = 'none';
+
+      const payload = {
+        userId: userData.id,
+        role: selectedRole,
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        age: document.getElementById('age').value,
+        weight: document.getElementById('weight').value,
+        height: document.getElementById('height').value,
+        contactNumber: document.getElementById('contactNumber').value.trim()
+      };
+
+      if (selectedRole === 'kid') {
+        payload.school = document.getElementById('school').value.trim();
+        payload.educationLevel = document.getElementById('educationLevel').value;
+      }
+
+      if (!payload.firstName || !payload.lastName || !payload.age || !payload.contactNumber) {
+        errorEl.textContent = 'Please fill in all required fields';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/api/profile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        window.location.href = '/dashboard.html';
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
