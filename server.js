@@ -63,18 +63,19 @@ function generateCode() {
 }
 
 app.post('/api/register', (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password required' });
+  const { email, password, name } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
   const existing = Object.values(users).find(u => u.email === email);
   if (existing) {
     return res.status(400).json({ error: 'An account with this email already exists' });
   }
 
+  const userName = name || email.split('@')[0];
   const userId = uuidv4();
-  users[userId] = { id: userId, name, email, password: hashPassword(password), createdAt: Date.now() };
+  users[userId] = { id: userId, name: userName, email, password: hashPassword(password), createdAt: Date.now() };
   saveData();
-  res.json({ user: { id: userId, name, email, createdAt: users[userId].createdAt } });
+  res.json({ user: { id: userId, name: userName, email, createdAt: users[userId].createdAt } });
 });
 
 app.post('/api/login', (req, res) => {
