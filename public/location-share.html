@@ -19,7 +19,7 @@
           <circle cx="12" cy="10" r="3"/>
         </svg>
         <h2>Location Sharing Active</h2>
-        <p>Your location is being shared with your friends group.</p>
+        <p>Your location is being shared with your group.</p>
       </div>
 
       <div class="status-indicator" id="statusIndicator">
@@ -72,7 +72,7 @@
       socket = io(API, { transports: ['polling', 'websocket'] });
       socket.on('connect', () => {
         socket.emit('user:join', { userId: userData.id, groupId });
-        setStatus('connected', 'Connected');
+        setStatus('active', 'Connected - sharing location');
       });
 
       socket.on('disconnect', () => {
@@ -84,7 +84,7 @@
       });
 
       socket.on('location:requested', ({ fromUserId, fromName }) => {
-        setStatus('active', `📍 ${fromName} is requesting your location`);
+        setStatus('active', `${fromName} is requesting your location`);
         if (lastPosition) {
           socket.emit('location:request:response', {
             fromUserId,
@@ -97,7 +97,7 @@
       });
 
       socket.on('ping:received', ({ fromName }) => {
-        document.getElementById('pingMessage').textContent = `📍 ${fromName} is checking on you! Tap to acknowledge.`;
+        document.getElementById('pingMessage').textContent = `${fromName} is checking on you!`;
         document.getElementById('pingNotification').style.display = 'block';
         if (navigator.vibrate) navigator.vibrate(200);
         socket.emit('ping:ack', { fromUserId: userData.id, targetUserId: userData.id, groupId });
