@@ -25,10 +25,6 @@
 
       <div id="registerForm">
         <div class="form-group">
-          <label for="regName">Name</label>
-          <input type="text" id="regName" placeholder="e.g. John" required>
-        </div>
-        <div class="form-group">
           <label for="regEmail">Email Address</label>
           <input type="email" id="regEmail" placeholder="e.g. parent@example.com" required>
         </div>
@@ -50,13 +46,12 @@
     const API = window.location.origin;
 
     async function handleRegister() {
-      const name = document.getElementById('regName').value.trim();
       const email = document.getElementById('regEmail').value.trim();
       const password = document.getElementById('regPassword').value;
       const errorEl = document.getElementById('errorMsg');
       errorEl.style.display = 'none';
 
-      if (!name || !email || !password) {
+      if (!email || !password) {
         errorEl.textContent = 'Please fill in all fields';
         errorEl.style.display = 'block';
         return;
@@ -66,7 +61,7 @@
         const res = await fetch(`${API}/api/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password })
+          body: JSON.stringify({ email, password })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
