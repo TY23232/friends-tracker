@@ -2,18 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Friends Tracker - Dashboard</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
   <div class="app-container">
-    <aside class="sidebar">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
+
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <h2>Friends Tracker</h2>
-        <div class="user-info" id="userInfo"></div>
+        <div>
+          <h2>Friends Tracker</h2>
+          <div class="user-info" id="userInfo"></div>
+        </div>
       </div>
 
       <div class="sidebar-section">
@@ -74,7 +81,6 @@
       <div id="etaMap" style="height:300px; margin-top:12px; border-radius:8px;"></div>
     </div>
   </div>
-
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/app.js"></script>
