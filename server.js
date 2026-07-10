@@ -88,7 +88,24 @@ app.post('/api/login', (req, res) => {
     return res.status(401).json({ error: 'Incorrect password' });
   }
 
-  res.json({ user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt } });
+  res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role || null, profile: user.profile || null, createdAt: user.createdAt } });
+});
+
+app.post('/api/profile', (req, res) => {
+  const { userId, role, firstName, lastName, age, weight, height, contactNumber, school, educationLevel } = req.body;
+  if (!userId || !role) return res.status(400).json({ error: 'userId and role required' });
+  if (!users[userId]) return res.status(404).json({ error: 'User not found' });
+  if (role !== 'kid' && role !== 'parent') return res.status(400).json({ error: 'Role must be kid or parent' });
+
+  users[userId].role = role;
+  users[userId].profile = { firstName, lastName, age, weight, height, contactNumber };
+  if (role === 'kid') {
+    users[userId].profile.school = school || '';
+    users[userId].profile.educationLevel = educationLevel || '';
+  }
+  saveData();
+
+  res.json({ user: { id: users[userId].id, name: users[userId].name, email: users[userId].email, role: users[userId].role, profile: users[userId].profile, createdAt: users[userId].createdAt } });
 });
 
 app.post('/api/groups', (req, res) => {
@@ -159,7 +176,7 @@ app.post('/api/groups/:id/invite', (req, res) => {
 app.get('/api/user/:id', (req, res) => {
   const user = users[req.params.id];
   if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json({ user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt } });
+  res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role || null, profile: user.profile || null, createdAt: user.createdAt } });
 });
 
 io.on('connection', (socket) => {
