@@ -27,6 +27,11 @@ function loadScript(src) {
   });
 }
 
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+
 async function initDashboard() {
   const user = getUser();
   if (!user) {
@@ -174,6 +179,10 @@ async function selectGroup(groupId) {
     if (typeof google !== 'undefined' && google.maps && mapInstance) {
       updateMapMarkers();
     }
+
+    if (window.innerWidth <= 900) {
+      toggleSidebar();
+    }
   } catch (err) {
     console.error('Failed to load group:', err);
   }
@@ -192,7 +201,7 @@ function renderMembers() {
       <div class="member-item">
         <div class="member-info">
           <div class="member-avatar">${initials}</div>
-          <div>
+          <div class="member-details">
             <div class="member-name">${m.name} ${isSelf ? '(You)' : ''}</div>
             <div class="member-status ${status ? 'online' : 'offline'}">
               ${status ? '● Online' : '○ Offline'}
@@ -201,10 +210,10 @@ function renderMembers() {
         </div>
         ${!isSelf ? `
           <div class="member-actions">
-            <button class="btn-ping" onclick="requestPing('${m.userId}')">📡 Ping</button>
-            <button class="btn-locate" onclick="requestLocation('${m.userId}')">📍 Locate</button>
-            <button class="btn-route" onclick="showRoute('${m.userId}')">🚗 Route</button>
-            <button class="btn-eta" onclick="requestETA('${m.userId}')">🕐 ETA</button>
+            <button class="btn-ping" onclick="requestPing('${m.userId}')">Ping</button>
+            <button class="btn-locate" onclick="requestLocation('${m.userId}')">Locate</button>
+            <button class="btn-route" onclick="showRoute('${m.userId}')">Route</button>
+            <button class="btn-eta" onclick="requestETA('${m.userId}')">ETA</button>
           </div>
         ` : ''}
       </div>
@@ -346,20 +355,15 @@ function showNotification(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = 'toast-notification';
   toast.style.cssText = `
-    position: fixed; bottom: 24px; right: 24px; padding: 14px 20px;
-    border-radius: 12px; font-size: 14px; font-weight: 500;
-    z-index: 2000; animation: slideIn 0.3s ease;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
     background: ${type === 'success' ? '#e8f5e9' : type === 'error' ? '#ffebee' : '#e3f2fd'};
     color: ${type === 'success' ? '#2e7d32' : type === 'error' ? '#c62828' : '#1565c0'};
-    max-width: 360px;
   `;
   toast.textContent = message;
   document.body.appendChild(toast);
 
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateX(100%)';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
     toast.style.transition = 'all 0.3s ease';
     setTimeout(() => toast.remove(), 300);
   }, 4000);
