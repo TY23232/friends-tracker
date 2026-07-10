@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const http = require('http');
 const fs = require('fs');
+const crypto = require('crypto');
 const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 
@@ -18,6 +19,10 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
+
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 function loadData() {
   try {
@@ -58,27 +63,32 @@ function generateCode() {
 }
 
 app.post('/api/register', (req, res) => {
-  const { email, name } = req.body;
-  if (!email || !name) return res.status(400).json({ error: 'Email and name required' });
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password required' });
 
   const existing = Object.values(users).find(u => u.email === email);
   if (existing) {
-    return res.json({ user: existing });
+    return res.status(400).json({ error: 'An account with this email already exists' });
   }
 
   const userId = uuidv4();
-  users[userId] = { id: userId, email, name, createdAt: Date.now() };
+  users[userId] = { id: userId, name, email, password: hashPassword(password), createdAt: Date.now() };
   saveData();
-  res.json({ user: users[userId] });
+  res.json({ user: { id: userId, name, email, createdAt: users[userId].createdAt } });
 });
 
 app.post('/api/login', (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email required' });
+  const { name, password } = req.body;
+  if (!name || !password) return res.status(400).json({ error: 'Name and password required' });
 
-  const user = Object.values(users).find(u => u.email === email);
-  if (!user) return res.status(404).json({ error: 'User not found. Please register first.' });
-  res.json({ user });
+  const user = Object.values(users).find(u => u.name === name);
+  if (!user) return res.status(404).json({ error: 'User not found. Please create an account.' });
+
+  if (user.password !== hashPassword(password)) {
+    return res.status(401).json({ error: 'Incorrect password' });
+  }
+
+  res.json({ user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt } });
 });
 
 app.post('/api/groups', (req, res) => {
@@ -149,7 +159,7 @@ app.post('/api/groups/:id/invite', (req, res) => {
 app.get('/api/user/:id', (req, res) => {
   const user = users[req.params.id];
   if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json({ user });
+  res.json({ user: { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt } });
 });
 
 io.on('connection', (socket) => {
