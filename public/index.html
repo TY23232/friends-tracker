@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Friends Tracker</title>
+  <title>Find My Parent</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
@@ -11,39 +11,25 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
-  <div class="auth-container">
+  <div class="auth-container blue-theme">
     <div class="auth-card">
       <div class="logo">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2196F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
-        <h1>Friends Tracker</h1>
-        <p>Keep your friends within reach</p>
+        <h1>Find My Parent</h1>
+        <p>Stay connected with your family</p>
       </div>
 
-      <div id="authForm">
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" placeholder="e.g. friend@example.com" required>
-        </div>
-        <div class="form-group">
-          <label for="name">Your Name</label>
-          <input type="text" id="name" placeholder="e.g. John" required>
-        </div>
-        <button onclick="handleAuth()" class="btn-primary" id="authBtn">Get Started</button>
-        <p class="auth-switch">
-          Already have an account? <a href="#" onclick="toggleAuth()">Sign in</a>
-        </p>
-      </div>
-
-      <div id="signinForm" style="display:none">
+      <div id="signinForm">
         <div class="form-group">
           <label for="signinEmail">Email Address</label>
-          <input type="email" id="signinEmail" placeholder="e.g. friend@example.com" required>
+          <input type="email" id="signinEmail" placeholder="e.g. parent@example.com" required>
         </div>
-        <button onclick="handleSignIn()" class="btn-primary">Sign In</button>
+        <button onclick="handleSignIn()" class="btn-primary blue-btn">Sign In</button>
         <p class="auth-switch">
-          New here? <a href="#" onclick="toggleAuth()">Create account</a>
+          Don't have an account? <a href="/register.html">Create new account</a>
         </p>
       </div>
 
@@ -53,40 +39,7 @@
 
   <script src="/js/app.js"></script>
   <script>
-    function toggleAuth() {
-      document.getElementById('authForm').style.display =
-        document.getElementById('authForm').style.display === 'none' ? 'block' : 'none';
-      document.getElementById('signinForm').style.display =
-        document.getElementById('signinForm').style.display === 'none' ? 'block' : 'none';
-    }
-
-    async function handleAuth() {
-      const email = document.getElementById('email').value.trim();
-      const name = document.getElementById('name').value.trim();
-      const errorEl = document.getElementById('errorMsg');
-      errorEl.style.display = 'none';
-
-      if (!email || !name) {
-        errorEl.textContent = 'Please fill in all fields';
-        errorEl.style.display = 'block';
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API}/api/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        window.location.href = '/dashboard.html';
-      } catch (err) {
-        errorEl.textContent = err.message;
-        errorEl.style.display = 'block';
-      }
-    }
+    const API = window.location.origin;
 
     async function handleSignIn() {
       const email = document.getElementById('signinEmail').value.trim();
