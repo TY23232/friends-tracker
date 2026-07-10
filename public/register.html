@@ -71,7 +71,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
         localStorage.setItem('user', JSON.stringify(data.user));
-        window.location.href = '/dashboard.html';
+        window.location.href = '/profile-setup.html';
       } catch (err) {
         errorEl.textContent = err.message;
         errorEl.style.display = 'block';
